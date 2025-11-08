@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Sathi - Backend Health Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #f0f9ff 50%, #ecfeff 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .loading { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin: 20px 0;
+        }
+        pre {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Health Sathi Backend Health Check</h1>
+        
+        <div class="info">
+            <h3>📋 System Status</h3>
+            <p><strong>Expected Frontend:</strong> <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+            <p><strong>Expected Backend:</strong> <a href="http://localhost:5000/api/health" target="_blank">http://localhost:5000/api/health</a></p>
+            <p><strong>Current Time:</strong> <span id="currentTime"></span></p>
+        </div>
+
+        <div id="status" class="status loading">
+            🔄 Testing backend connection...
+        </div>
+
+        <div id="details" style="display: none;">
+            <h3>Backend Response:</h3>
+            <pre id="responseData"></pre>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="checkHealth()">🔄 Refresh Status</button>
+            <button onclick="openMain()">🏠 Open Health Sathi App</button>
+            <button onclick="openBackendDirect()">🔗 Test Backend Direct</button>
+        </div>
+
+        <div class="info">
+            <h3>🚀 Quick Start Instructions</h3>
+            <ol>
+                <li>Open terminal in your Health Sathi folder</li>
+                <li>Run: <code>npm install</code></li>
+                <li>Run: <code>npm run dev</code></li>
+                <li>Wait for both servers to start</li>
+                <li>Click "Refresh Status" above</li>
+            </ol>
+            
+            <h4>🐛 Troubleshooting:</h4>
+            <ul>
+                <li><strong>Port in use:</strong> Kill processes on ports 3000 and 5000</li>
+                <li><strong>Dependencies missing:</strong> Run <code>npm install</code></li>
+                <li><strong>Permission errors:</strong> Try running as administrator</li>
+                <li><strong>Firewall blocking:</strong> Allow Node.js through firewall</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        }
+        
+        async function checkHealth() {
+            const statusDiv = document.getElementById('status');
+            const detailsDiv = document.getElementById('details');
+            const responseDiv = document.getElementById('responseData');
+            
+            statusDiv.className = 'status loading';
+            statusDiv.innerHTML = '🔄 Testing backend connection...';
+            detailsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Backend is running successfully!';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                    detailsDiv.style.display = 'block';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Backend connection failed: ${error.message}`;
+                
+                // Provide helpful suggestions based on error type
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    statusDiv.innerHTML += '<br><br>💡 <strong>Solution:</strong> Start the backend server with: <code>npm run server</code>';
+                } else if (error.message.includes('ECONNREFUSED')) {
+                    statusDiv.innerHTML += '<br><br>💡 <strong>Solution:</strong> The server is not running. Use: <code>npm run dev</code>';
+                }
+            }
+        }
+        
+        function openMain() {
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        function openBackendDirect() {
+            window.open('http://localhost:5000/api/health', '_blank');
+        }
+        
+        // Initialize
+        updateTime();
+        setInterval(updateTime, 1000);
+        checkHealth();
+    </script>
+</body>
+</html>
